@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using RefactoringKata.Enum;
 
 namespace RefactoringKata
@@ -7,10 +8,11 @@ namespace RefactoringKata
 	{
 		private Orders _orders;
 		private StringBuilder _orderDetail = new StringBuilder();
-
+		private Dictionary<string, string> _contentDetail;
 		public OrdersWriter(Orders orders)
 		{
 			_orders = orders;
+			InitDictionary();
 		}
 
 		public string GetContents()
@@ -20,41 +22,53 @@ namespace RefactoringKata
 			return _orderDetail.ToString();
 		}
 
+		private void InitDictionary()
+		{
+			_contentDetail = new Dictionary<string, string>();
+			_contentDetail.Add("openingChar", "{\"orders\": [");
+			_contentDetail.Add("order", "{0}\"id\": {1}, \"products\": [");
+			_contentDetail.Add("productSizeError", "{0}\"code\": \"{1}\", \"color\": \"{2}\", \"price\": {3}, \"currency\": \"{4}\"{5}, ");
+			_contentDetail.Add("product", "{0}\"code\": \"{1}\", \"color\": \"{2}\", \"size\": \"{3}\", \"price\": {4}, \"currency\": \"{5}\"{6}, ");
+			_contentDetail.Add("closingChar", "]}");
+		}
+
 		private void Set_orderDetail()
 		{
-			_orderDetail.Append("{\"orders\": [");
+			_orderDetail.Append(_contentDetail["openingChar"]);
 
 			for (var i = 0; i < _orders.GetOrdersCount(); i++)
 			{
 				var order = _orders.GetOrder(i);
-				_orderDetail.AppendFormat("{0}\"id\": {1}, \"products\": [", "{", order.GetOrderId());
+				_orderDetail.AppendFormat(_contentDetail["order"], "{", order.GetOrderId());
 
 				SetOrderDetail(order);
-
-				SetCloseChar(order.GetProductsCount() > 0);
-				
-				_orderDetail.Append(", ");
 			}
 			SetCloseChar(_orders.GetOrdersCount() > 0);
 		}
 
 		private void SetOrderDetail(Order order)
 		{
-			for (var productCount = 0; productCount < order.GetProductsCount(); productCount++)
+			for (var i = 0; i < order.GetProductsCount(); i++)
 			{
-				SetProductDetail(order.GetProduct(productCount));
+				SetProductDetail(order.GetProduct(i));
 			}
+			SetCloseChar(order.GetProductsCount() > 0);
+
+			_orderDetail.Append(", ");
 		}
 
 		private void SetProductDetail(Product product)
 		{
-			_orderDetail.AppendFormat("{0}\"code\": \"{1}\", \"color\": \"{2}\", ", "{", product.Code, product.Color);
-
 			if (product.Size != EnumProductSize.SIZE_NOT_APPLICABLE)
 			{
-				_orderDetail.AppendFormat("\"size\": \"{0}\", ", product.Size);
+				_orderDetail.AppendFormat(_contentDetail["product"], "{", product.Code, product.Color, product.Size, product.Price, product.Currency, "}");
+
 			}
-			_orderDetail.AppendFormat("\"price\": {0}, \"currency\": \"{1}\"{2}, ", product.Price, product.Currency, "}");
+			else
+			{
+				_orderDetail.AppendFormat(_contentDetail["productSizeError"], "{", product.Code, product.Color, product.Price, product.Currency, "}");
+
+			}
 		}
 
 		private void SetCloseChar(bool isRemoveChar)
@@ -63,7 +77,7 @@ namespace RefactoringKata
 			{
 				_orderDetail.Remove(_orderDetail.Length - 2, 2);
 			}
-			_orderDetail.Append("]}");
+			_orderDetail.Append(_contentDetail["closingChar"]);
 		}
 	}
 }
