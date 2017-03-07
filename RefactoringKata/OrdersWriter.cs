@@ -1,107 +1,69 @@
 ﻿using System.Text;
+using RefactoringKata.Enum;
 
 namespace RefactoringKata
 {
-    public class OrdersWriter
-    {
-        private Orders _orders;
+	public class OrdersWriter
+	{
+		private Orders _orders;
+		private StringBuilder _orderDetail = new StringBuilder();
 
-        public OrdersWriter(Orders orders)
-        {
-            _orders = orders;
-        }
+		public OrdersWriter(Orders orders)
+		{
+			_orders = orders;
+		}
 
-        public string GetContents()
-        {
-            var sb = new StringBuilder("{\"orders\": [");
+		public string GetContents()
+		{
+			Set_orderDetail();
 
-            for (var i = 0; i < _orders.GetOrdersCount(); i++)
-            {
-                var order = _orders.GetOrder(i);
-                sb.Append("{");
-                sb.Append("\"id\": ");
-                sb.Append(order.GetOrderId());
-                sb.Append(", ");
-                sb.Append("\"products\": [");
+			return _orderDetail.ToString();
+		}
 
-                for (var j = 0; j < order.GetProductsCount(); j++)
-                {
-                    var product = order.GetProduct(j);
-                    sb.Append("{");
-                    sb.Append("\"code\": \"");
-                    sb.Append(product.Code);
-                    sb.Append("\", ");
-                    sb.Append("\"color\": \"");
-                    sb.Append(getColorFor(product));
-                    sb.Append("\", ");
+		private void Set_orderDetail()
+		{
+			_orderDetail.Append("{\"orders\": [");
 
-                    if (product.Size != Product.SIZE_NOT_APPLICABLE)
-                    {
-                        sb.Append("\"size\": \"");
-                        sb.Append(getSizeFor(product));
-                        sb.Append("\", ");
-                    }
+			for (var i = 0; i < _orders.GetOrdersCount(); i++)
+			{
+				var order = _orders.GetOrder(i);
+				_orderDetail.AppendFormat("{0}\"id\": {1}, \"products\": [", "{", order.GetOrderId());
 
-                    sb.Append("\"price\": ");
-                    sb.Append(product.Price);
-                    sb.Append(", ");
-                    sb.Append("\"currency\": \"");
-                    sb.Append(product.Currency);
-                    sb.Append("\"}, ");
-                }
+				SetOrderDetail(order);
 
-                if (order.GetProductsCount() > 0)
-                {
-                    sb.Remove(sb.Length - 2, 2);
-                }
+				SetCloseChar(order.GetProductsCount() > 0);
+				
+				_orderDetail.Append(", ");
+			}
+			SetCloseChar(_orders.GetOrdersCount() > 0);
+		}
 
-                sb.Append("]");
-                sb.Append("}, ");
-            }
+		private void SetOrderDetail(Order order)
+		{
+			for (var productCount = 0; productCount < order.GetProductsCount(); productCount++)
+			{
+				SetProductDetail(order.GetProduct(productCount));
+			}
+		}
 
-            if (_orders.GetOrdersCount() > 0)
-            {
-                sb.Remove(sb.Length - 2, 2);
-            }
+		private void SetProductDetail(Product product)
+		{
+			_orderDetail.AppendFormat("{0}\"code\": \"{1}\", \"color\": \"{2}\", ", "{", product.Code, product.Color);
 
-            return sb.Append("]}").ToString();
-        }
+			if (product.Size != EnumProductSize.SIZE_NOT_APPLICABLE)
+			{
+				_orderDetail.AppendFormat("\"size\": \"{0}\", ", product.Size);
+			}
+			_orderDetail.AppendFormat("\"price\": {0}, \"currency\": \"{1}\"{2}, ", product.Price, product.Currency, "}");
+		}
 
-
-        private string getSizeFor(Product product)
-        {
-            switch (product.Size)
-            {
-                case 1:
-                    return "XS";
-                case 2:
-                    return "S";
-                case 3:
-                    return "M";
-                case 4:
-                    return "L";
-                case 5:
-                    return "XL";
-                case 6:
-                    return "XXL";
-                default:
-                    return "Invalid Size";
-            }
-        }
-
-        private string getColorFor(Product product)
-        {
-            switch (product.Color)
-            {
-                case 1:
-                    return "blue";
-                case 2:
-                    return "red";
-                case 3:
-                    return "yellow";
-                default:
-                    return "no color";
-            }
-        }
-    }
+		private void SetCloseChar(bool isRemoveChar)
+		{
+			if (isRemoveChar)
+			{
+				_orderDetail.Remove(_orderDetail.Length - 2, 2);
+			}
+			_orderDetail.Append("]}");
+		}
+	}
 }
