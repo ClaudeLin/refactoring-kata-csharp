@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace RefactoringKata
 {
@@ -31,5 +32,10 @@ namespace RefactoringKata
         {
             _products.Add(product);
         }
-    }
+
+		public string ToJsonString()
+		{
+			return $"{{\"id\": {id}, \"products\": [{string.Join(",", _products.Select(o => o.ToJsonString()))}]}}";
+		}
+	}
 }

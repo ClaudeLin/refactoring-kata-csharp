@@ -1,4 +1,5 @@
-﻿using RefactoringKata.Enum;
+﻿using System.Text;
+using RefactoringKata.Enum;
 
 namespace RefactoringKata
 {
@@ -18,5 +19,25 @@ namespace RefactoringKata
             Price = price;
             Currency = currency;
         }
+
+		public string ToJsonString()
+		{
+			var sb=new StringBuilder();
+			sb.Append($"{{\"code\": \"{Code}\", \"color\": \"{Color}\", ");
+
+			if (IsSizeApplicable())
+			{
+				sb.Append($"\"size\": \"{Size}\", ");
+			}
+
+			sb.Append($"\"price\": {Price}, \"currency\": \"{Currency}\"}}");
+
+			return sb.ToString();
+		}
+
+	    private bool IsSizeApplicable()
+	    {
+		    return Size != EnumProductSize.SIZE_NOT_APPLICABLE;
+	    }
     }
 }
